@@ -16,6 +16,7 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi
+import re
 
 # 🔑 Load env variables
 load_dotenv()
@@ -83,17 +84,20 @@ def scrape_website(url):
     finally:
         if driver:
             driver.quit()
+def extract_video_id(url):
+    match = re.search(r"(?:v=|youtu\.be/)([^&\n?#]+)", url)
+    return match.group(1) if match else None
 
 def get_youtube_transcript(url):
     try:
         # video id extract
-        if "v=" in url:
-            video_id = url.split("v=")[-1].split("&")[0]
-        else:
-            return "Invalid YouTube URL"
+        video_id = extract_video_id(url)
+
+        if not video_id:
+         return "Invalid YouTube URL ❌"
 
         # 🔥 IMPORTANT FIX
-        transcript = YouTubeTranscriptApi().fetch(video_id,languages=['hi', 'en'])
+        transcript = YouTubeTranscriptApi().fetch(video_id,languages=['en', 'hi', 'fr', 'es'])
 
         text = " ".join([item.text for item in transcript])
 
@@ -110,7 +114,7 @@ def summarize_text(text):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Summarize in bullet points, clean headings, avoid repetition, keep it concise , and also i am using python selenium for scrapping, if you dont get the desired result please tell user that website summary cannot be given as something is missing like url is invalid or something .if error found please tell the user in a non technical way or in layman language"},
+                {"role": "system", "content": "Summarize in bullet points, clean headings, avoid repetition, keep it concise and conver the content in english if not , and also i am using python selenium for scrapping, if you dont get the desired result please tell user that website summary cannot be given as something is missing like url is invalid or something .if error found please tell the user in a non technical way or in layman language"},
                 {"role": "user", "content": text}
             ]
         )
