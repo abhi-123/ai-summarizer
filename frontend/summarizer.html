@@ -55,7 +55,7 @@ function isValidUrl(str) {
   }
 }
 document.getElementById("result").innerHTML = '<div class="loader"></div>';
-  const res = await fetch("http://127.0.0.1:8000/summarize", {
+  const res = await fetch("https://ai-summarizer-1o0p.onrender.com/summarize", {  //http://127.0.0.1:8000/summarize
     method: "POST",
     headers: {
       "Content-Type": "application/json"
