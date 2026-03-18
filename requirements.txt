@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+selenium
+beautifulsoup4
+webdriver-manager
+openai
+python-dotenv
+youtube-transcript-api
