@@ -101,7 +101,7 @@ def scrape_with_requests(url):
 
         text = soup.get_text(separator="\n", strip=True)
 
-        return text[:2000] if text else None
+        return text[:3000] if text else None
 
     except Exception as e:
         print("Requests failed:", e)
@@ -180,8 +180,8 @@ def summarize(data: RequestData):
           print(ENV)
           if ENV == "production":
            print("Running in PRODUCTION → using requests")
-           return scrape_with_requests(url)
-
+           content = scrape_with_requests(url)
+           print(content)
           else:
            print("Running in LOCAL → trying Selenium first")
 
@@ -190,6 +190,7 @@ def summarize(data: RequestData):
           if not content or len(content) < 500:
             print("Fallback to requests...")
             content = scrape_with_requests(url)
+            print(content)
 
     summary = summarize_text(content)
 
