@@ -16,6 +16,7 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi
+from pytube import YouTube
 import re
 
 # 🔑 Load env variables
@@ -104,8 +105,21 @@ def get_youtube_transcript(url):
         return text[:3000]
 
     except Exception as e:
-        return f"Error fetching transcript: {e}"
+         print("Transcript failed:", e)
+         metadata = get_youtube_metadata(url)
+         return metadata
+         
 
+def get_youtube_metadata(url):
+    try:
+        yt = YouTube(url)
+        title = yt.title
+        description = yt.description
+
+        return f"Title: {title}\n\nDescription: {description[:2000]}"
+    except Exception as e:
+        print("Metadata error:", e)
+        return None
 
 # 🤖 AI summary function
 def summarize_text(text):
