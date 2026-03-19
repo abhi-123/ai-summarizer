@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from bs4 import BeautifulSoup
+import requests
 from webdriver_manager.chrome import ChromeDriverManager
 
 from openai import OpenAI
@@ -21,6 +22,7 @@ import re
 
 # 🔑 Load env variables
 load_dotenv()
+ENV = os.getenv("ENV", "local")
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -41,7 +43,7 @@ class RequestData(BaseModel):
 
 
 # 🌐 Scraper function
-def scrape_website(url):
+def scrape_with_selenium(url):
     driver = None
     try:
         options = Options()
@@ -85,6 +87,25 @@ def scrape_website(url):
     finally:
         if driver:
             driver.quit()
+
+def scrape_with_requests(url):
+    try:
+        res = requests.get(url, headers={
+            "User-Agent": "Mozilla/5.0"
+        }, timeout=10)
+
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        for tag in soup(["script", "style"]):
+            tag.decompose()
+
+        text = soup.get_text(separator="\n", strip=True)
+
+        return text[:2000] if text else None
+
+    except Exception as e:
+        print("Requests failed:", e)
+        return None
 def extract_video_id(url):
     match = re.search(r"(?:v=|youtu\.be/)([^&\n?#]+)", url)
     return match.group(1) if match else None
@@ -156,7 +177,19 @@ def summarize(data: RequestData):
     if "youtube.com" in url or "youtu.be" in url:
         content = get_youtube_transcript(url)
     else:
-        content = scrape_website(url)
+          print(ENV)
+          if ENV == "production":
+           print("Running in PRODUCTION → using requests")
+           return scrape_with_requests(url)
+
+          else:
+           print("Running in LOCAL → trying Selenium first")
+
+           content = scrape_with_selenium(url)
+
+          if not content or len(content) < 500:
+            print("Fallback to requests...")
+            content = scrape_with_requests(url)
 
     summary = summarize_text(content)
 
