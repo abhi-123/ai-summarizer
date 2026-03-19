@@ -6,3 +6,4 @@ webdriver-manager
 openai
 python-dotenv
 youtube-transcript-api
+pytube
