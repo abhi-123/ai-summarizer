@@ -129,3 +129,18 @@ You can try the application using:
 - 🌍 Support multi-language input and translation  
 - ⚡ Improve performance with caching mechanisms  
 - 🔐 Add authentication for personalized experience
+
+
+## ⭐ Show Your Support
+
+If you found this project helpful or interesting, please consider giving it a ⭐ on GitHub!
+
+It helps others discover the project and motivates me to build more such applications 🚀
+
+---
+
+## 🙌 Feedback & Contributions
+
+Feel free to open issues or submit pull requests if you have suggestions or improvements.
+
+Your feedback is always welcome!
