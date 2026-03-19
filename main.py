@@ -191,9 +191,14 @@ def summarize(data: RequestData):
             print("Fallback to requests...")
             content = scrape_with_requests(url)
             print(content)
+    if content:
+            summary = summarize_text(content)
+            return {
+                    "summary": summary
+                }
+    if not content:
+            return {
+                "summary": "⚠️ Could not extract content from this link. Try another one."
+            }
 
-    summary = summarize_text(content)
-
-    return {
-        "summary": summary
-    }
+ 
