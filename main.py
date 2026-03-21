@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 import re
-
+from time import sleep
 # 🔑 Load env variables
 load_dotenv()
 ENV = os.getenv("ENV", "local")
@@ -28,7 +28,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = FastAPI()
 
-# ✅ CORS (React/JS connect ke liye)
+# ✅ CORS (React/JS connect)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -64,7 +64,8 @@ def scrape_with_selenium(url):
         driver.get(url)
 
         # ✅ Smart wait
-        wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+       # wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        wait.until(lambda driver: len(driver.page_source) > 2000)
 
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, "html.parser")
@@ -107,28 +108,37 @@ def scrape_with_requests(url):
         print("Requests failed:", e)
         return None
 def extract_video_id(url):
-    match = re.search(r"(?:v=|youtu\.be/)([^&\n?#]+)", url)
+    match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11})", url)
     return match.group(1) if match else None
 
 def get_youtube_transcript(url):
     try:
-        # video id extract
         video_id = extract_video_id(url)
 
         if not video_id:
-         return "Invalid YouTube URL ❌"
+            return None
 
-        # 🔥 IMPORTANT FIX
-        transcript = YouTubeTranscriptApi().fetch(video_id,languages=['en', 'hi', 'fr', 'es'])
+        transcript = YouTubeTranscriptApi().fetch(
+            video_id,
+            languages=['en', 'hi', 'fr', 'es']
+        )
 
         text = " ".join([item.text for item in transcript])
+
+        if not text.strip():
+            return None
 
         return text[:3000]
 
     except Exception as e:
-         print("Transcript failed:", e)
-         metadata = get_youtube_metadata(url)
-         return metadata
+        print("❌ Transcript failed:", e)
+
+        metadata = get_youtube_metadata(url)
+
+        if metadata:
+            return metadata
+
+        return None
          
 
 def get_youtube_metadata(url):
@@ -137,9 +147,13 @@ def get_youtube_metadata(url):
         title = yt.title
         description = yt.description
 
-        return f"Title: {title}\n\nDescription: {description[:2000]}"
+        if not description:
+            return None
+
+        return f"Title: {title}\n\nDescription:\n{description[:2000]}"
+
     except Exception as e:
-        print("Metadata error:", e)
+        print("❌ Metadata error:", e)
         return None
 
 # 🤖 AI summary function
@@ -173,32 +187,41 @@ def summarize_text(text):
 def summarize(data: RequestData):
     url = data.url
 
-    # 🔥 YouTube handling
+    # 🎥 YouTube
     if "youtube.com" in url or "youtu.be" in url:
         content = get_youtube_transcript(url)
+
     else:
-          print(ENV)
-          if ENV == "production":
-           print("Running in PRODUCTION → using requests")
-           content = scrape_with_requests(url)
-           print(content)
-          else:
-           print("Running in LOCAL → trying Selenium first")
+        if ENV == "production":
+            print("PRODUCTION → requests")
+            content = scrape_with_requests(url)
+        else:
+            print("LOCAL → selenium")
+         #   sleep(5)
+            content = scrape_with_selenium(url)
+            if content:
+             lower_content = content.lower()
 
-           content = scrape_with_selenium(url)
+             if "enable javascript" in lower_content or "just a moment" in lower_content:
+                    return {
 
-          if not content or len(content) < 500:
+                     "summary": "⚠️ This website blocks automated access."
+                    }
+
+        if not content or len(content) < 300:
             print("Fallback to requests...")
             content = scrape_with_requests(url)
-            print(content)
-    if content:
-            summary = summarize_text(content)
-            return {
-                    "summary": summary
-                }
+
+    # 🔥 FINAL CHECK
     if not content:
-            return {
-                "summary": "⚠️ Could not extract content from this link. Try another one."
-            }
+        return {
+            "summary": "⚠️ This content cannot be extracted. The website or video may not allow access."
+        }
+
+    summary = summarize_text(content)
+
+    return {
+        "summary": summary
+    }
 
  
