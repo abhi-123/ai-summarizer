@@ -71,16 +71,28 @@ body {
   #result li {
     margin-bottom: 8px;
   }
+  .loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
   .loader {
     display: block;
-    margin: 40px auto;
+    margin: 2rem auto;
     border: 4px solid #f3f3f3;
     border-top: 4px solid #3498db;
     border-radius: 50%;
     width: 4rem;
     height: 4rem;
     animation: spin 2s linear infinite;
-
+  }
+  span {
+    display: block;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
   }
   
   @keyframes spin {

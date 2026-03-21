@@ -54,7 +54,8 @@ function isValidUrl(str) {
     return false;
   }
 }
-document.getElementById("result").innerHTML = '<div class="loader"></div>';
+document.getElementById("result").innerHTML = '<div class="loader-container"><div class="loader"></div><span>Generating summary...</span></div>';
+try {
   const res = await fetch("https://ai-summarizer-1o0p.onrender.com/summarize", {  //http://127.0.0.1:8000/summarize  // https://ai-summarizer-1o0p.onrender.com/summarize
     method: "POST",
     headers: {
@@ -67,6 +68,12 @@ document.getElementById("result").innerHTML = '<div class="loader"></div>';
 
   console.log(data);
   document.getElementById("result").innerHTML = marked.parse(data.summary);
+} catch (error) {
+document.getElementById("result").innerHTML = '<div class="loader-container"><div class="loader"></div><span>Trying to connect to server...</span></div>';
+  setTimeout(() => {
+    document.getElementById("result").innerHTML = '<p id="empty-state">Server is waking up or deploying...Please try again in 1–2 minutes</p>';
+  }, 3000);
+}
 }
 function isValidUrl(str) {
   try {

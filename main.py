@@ -185,43 +185,46 @@ def summarize_text(text):
 # 🔗 API endpoint
 @app.post("/summarize")
 def summarize(data: RequestData):
-    url = data.url
+     try:
+        url = data.url
 
-    # 🎥 YouTube
-    if "youtube.com" in url or "youtu.be" in url:
-        content = get_youtube_transcript(url)
+        # 🎥 YouTube
+        if "youtube.com" in url or "youtu.be" in url:
+            content = get_youtube_transcript(url)
 
-    else:
-        if ENV == "production":
-            print("PRODUCTION → requests")
-            content = scrape_with_requests(url)
         else:
-            print("LOCAL → selenium")
-         #   sleep(5)
-            content = scrape_with_selenium(url)
-            if content:
-             lower_content = content.lower()
+            if ENV == "production":
+                print("PRODUCTION → requests")
+                content = scrape_with_requests(url)
+            else:
+                print("LOCAL → selenium")
+            #   sleep(5)
+                content = scrape_with_selenium(url)
+                if content:
+                    lower_content = content.lower()
 
-             if "enable javascript" in lower_content or "just a moment" in lower_content:
-                    return {
+                    if "enable javascript" in lower_content or "just a moment" in lower_content:
+                            return {
 
-                     "summary": "⚠️ This website blocks automated access."
-                    }
+                            "summary": "⚠️ This website blocks automated access."
+                            }
 
-        if not content or len(content) < 300:
-            print("Fallback to requests...")
-            content = scrape_with_requests(url)
+                if not content or len(content) < 300:
+                    print("Fallback to requests...")
+                    content = scrape_with_requests(url)
 
-    # 🔥 FINAL CHECK
-    if not content:
+        # 🔥 FINAL CHECK
+        if not content:
+            return {
+                "summary": "⚠️ This content cannot be extracted. The website or video may not allow access."
+            }
+
+        summary = summarize_text(content)
+
         return {
-            "summary": "⚠️ This content cannot be extracted. The website or video may not allow access."
+            "summary": summary
         }
-
-    summary = summarize_text(content)
-
-    return {
-        "summary": summary
-    }
+     except Exception as e:
+        return "⚠️ Server is waking up or deploying...Please try again in 1–2 minutes"
 
  
