@@ -163,7 +163,29 @@ def summarize_text(text):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Summarize in bullet points, clean headings, avoid repetition, keep it concise and conver the content in english if not , and also i am using python selenium for scrapping, if you dont get the desired result please tell user that website summary cannot be given as something is missing like url is invalid or something .if error found please tell the user in a non technical way or in layman language"},
+                {"role": "system", "content": """
+                       You are a smart content summarizer.
+
+                        Instructions:
+                        - Summarize the given content into clear bullet points.
+                        - Use clean headings where appropriate.
+                        - Keep the response concise and avoid repetition.
+                        - Always respond in English, even if the input is in another language.
+
+                        Error Handling:
+                        - If the content is incomplete, unclear, or cannot be extracted properly, inform the user politely.
+                        - Do NOT use technical terms like "scraping error" or "Selenium failure".
+                        - Explain issues in simple, non-technical language.
+
+                        Examples:
+                        - "Sorry, I couldn’t access the content properly. Please check if the URL is correct."
+                        - "The website content is not available or could not be read. Please try again with a valid link."
+
+                        Tone:
+                        - Clear, helpful, and user-friendly.
+                        - Do not mention internal tools or processes.
+                """
+                },
                 {"role": "user", "content": text}
             ]
         )
